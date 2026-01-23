@@ -1,11 +1,11 @@
 import strawberry
 from app.graphql.inputs.api import ApiCreateInput
 from app.graphql.resolvers.api import resolve_get_api_by_id, resolve_get_apis, resolve_create_api
-from app.graphql.types.api import ApiType
+from app.graphql.types.api import ApiType, PaginatedApiType
 
 @strawberry.type
 class Query:
-    get_apis: list[ApiType] = strawberry.field(resolver=resolve_get_apis)
+    get_apis:PaginatedApiType = strawberry.field(resolver=resolve_get_apis)
     get_api_by_id: ApiType  = strawberry.field(resolver=resolve_get_api_by_id)
 
 @strawberry.type

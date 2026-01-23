@@ -1,5 +1,5 @@
 from typing import Sequence
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.api import ApiModel
 from app.graphql.inputs.api import ApiCreateInput
@@ -29,12 +29,17 @@ async def create_api_service(session: AsyncSession, data: ApiCreateInput) -> Api
 
     return new_api
 
-async def get_all_apis_service(session: AsyncSession) -> Sequence[ApiModel]:
-    query = select(ApiModel)
+async def get_all_apis_service(session: AsyncSession, offset: int, limit: int) -> Sequence[ApiModel]:
+    query_items = select(ApiModel).offset(offset).limit(limit)
+    result_items = await session.execute(query_items)
+    items = result_items.scalars().all()
 
-    result = await session.execute(query)
+    query_count = select(func.count()).select_from(ApiModel)
+    result_count = await session.execute(query_count)
+    total = result_count.scalar() or 0
+    total_pages = (total + limit - 1) // limit if limit > 0 else 0
 
-    return result.scalars().all()
+    return items, total_pages
 
 async def get_api_by_id_service(session: AsyncSession, api_id: int) -> ApiModel:
     query = select(ApiModel).where(ApiModel.id == api_id)
