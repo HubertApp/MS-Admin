@@ -1,0 +1,86 @@
+services:
+  broker:
+    container_name: rabbitmq-hubbert
+    image: rabbitmq:management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: "user"
+      RABBITMQ_DEFAULT_PASS: "password"
+      RABBITMQ_ERLANG_COOKIE: "secret_cookie_hubbert_12345"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q "check_port_connectivity"
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - ms-admin-network
+  db:
+    image: postgres:16-alpine
+    container_name: db-ms-admin
+    restart: always
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=ms_admin_db
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d ms_admin_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ms-admin-network
+
+  app:
+    build: .
+    container_name: ms-admin-api
+    ports:
+      - "8001:80"
+    volumes:
+      - .:/project
+    command: uvicorn app.main:app --host 0.0.0.0 --port 80 --reload --reload-dir /project
+    
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://user:password@db:5432/ms_admin_db
+      - RABBITMQ_URL=amqp://user:password@broker:5672
+    depends_on:
+      broker:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - ms-admin-network
+  # worker:
+  #   build: .
+  #   container_name: ms-admin-worker
+  #   ports:
+  #     - "8000:80"
+  #   volumes:
+  #     - ./app:/project/app
+  #   command: python -m uvicorn app.run_worker:app --host 0.0.0.0 --port 80 --reload --reload-dir /project/app
+  #   environment:
+  #     - DATABASE_URL=postgresql+asyncpg://user:password@db/ms_admin_db
+  #     - RABBITMQ_URL=amqp://user:password@broker:5672
+  #   depends_on:
+  #     broker:
+  #       condition: service_healthy
+  #     db:
+  #       condition: service_healthy
+  #   networks:
+  #     - ms-admin-network
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+
+networks:
+   ms-admin-network:
+    driver: bridge  
