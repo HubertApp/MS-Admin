@@ -1,5 +1,5 @@
 from typing import Sequence
-from sqlalchemy import func, select
+from sqlalchemy import func, select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.api import ApiModel
 from app.graphql.inputs.api import ApiCreateInput
@@ -28,6 +28,13 @@ async def create_api_service(session: AsyncSession, data: ApiCreateInput) -> Api
     # )
 
     return new_api
+
+async def delete_api_by_id_service(session: AsyncSession, api_id: int) -> bool:
+    query = delete(ApiModel).where(ApiModel.id == api_id)
+    result = await session.execute(query)
+    await session.commit()
+
+    return result.rowcount > 0
 
 async def get_all_apis_service(session: AsyncSession, offset: int, limit: int) -> Sequence[ApiModel]:
     query_items = select(ApiModel).offset(offset).limit(limit)

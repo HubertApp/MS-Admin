@@ -46,7 +46,7 @@ services:
       - "8001:80"
     volumes:
       - .:/project
-    command: uvicorn app.main:app --host 0.0.0.0 --port 80 --reload --reload-dir /project
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 80 --reload --reload-dir /project"
     
     environment:
       - DATABASE_URL=postgresql+asyncpg://user:password@db:5432/ms_admin_db

@@ -2,7 +2,8 @@ import strawberry
 from strawberry.types import Info
 from app.graphql.types.api import ApiType, PaginatedApiType
 from app.graphql.inputs.api import ApiCreateInput
-from app.services.api_service import create_api_service, get_all_apis_service, get_api_by_id_service
+from app.services.api_service import create_api_service, get_all_apis_service, get_api_by_id_service, delete_api_by_id_service
+
 
 async def resolve_create_api(info: Info, input: ApiCreateInput) -> ApiType:
     db_session = info.context["db"]
@@ -17,6 +18,13 @@ async def resolve_create_api(info: Info, input: ApiCreateInput) -> ApiType:
         endpoint_url=api_model.endpoint_url,
         api_key=api_model.api_key
     )
+
+async def resolve_delete_api_by_id(info: Info, api_id: int) -> bool:
+    db_session = info.context["db"]
+    try:
+        return await delete_api_by_id_service(session=db_session, api_id=api_id)
+    except Exception as e:
+        raise Exception(e)
 
 async def resolve_get_apis(info: Info, page: int = 1, page_size: int = 25) -> list[ApiType]:
     db = info.context["db"]
