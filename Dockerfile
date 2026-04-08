@@ -15,13 +15,12 @@ ENV UV_PROJECT_ENVIRONMENT="/opt/venv"
 
 WORKDIR /project
 
-COPY alembic.ini pyproject.toml uv.lock .env ./
+COPY pyproject.toml uv.lock .env ./
 
 # UV va maintenant installer dans /opt/venv
 RUN uv sync
 
 COPY app ./app
-COPY migrations ./migrations
 
 # On ajoute le nouveau chemin au PATH
 ENV PATH="/opt/venv/bin:${PATH}"
