@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from app.graphql.types.standardized_api import StandardApi
+from app.graphql.types.standardized_datasets import StandardDatasets
 
 
 class IFournisseur(ABC):
@@ -12,6 +12,6 @@ class IFournisseur(ABC):
         pass
 
     @abstractmethod
-    async def search(self, title: str = None, url: str = None) -> List[StandardApi] | None:
+    async def search(self, title: str = None, url: str = None) -> List[StandardDatasets] | None:
         """Doit retourner un dictionnaire standardisé ou None."""
         pass

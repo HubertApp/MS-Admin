@@ -1,20 +1,17 @@
 import strawberry
 from typing import List, Optional
-from datetime import datetime
 
-@strawberry.type
-class StandardResource:
+@strawberry.input
+class ResourceInput:
     title: str
     format: str
     download_url: str
-    updated_at: datetime
-    filesize_bytes: Optional[int] = None
 
-@strawberry.type
-class StandardApi:
+@strawberry.input
+class DatasetsInput:
     fournisseur_id: str
     external_id: str
     name: str
     country_code: str
     city_or_region: str
-    resources: List[StandardResource]
+    resources: List[ResourceInput] = strawberry.field(default_factory=list)

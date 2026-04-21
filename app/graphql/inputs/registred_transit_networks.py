@@ -8,10 +8,12 @@ class ResourceInput:
     download_url: str
 
 @strawberry.input
-class ApiInput:
+class TransitNetworkInput:
     fournisseur_id: str
     external_id: str
     name: str
     country_code: str
     city_or_region: str
-    resources: List[ResourceInput] = strawberry.field(default_factory=list)
+    endpoint_url: Optional[str] = None
+    description: Optional[str] = None
+    resources: Optional[List[ResourceInput]] = None
