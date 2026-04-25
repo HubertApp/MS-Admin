@@ -4,7 +4,7 @@ from typing import List
 
 import httpx
 from app.clients.i_fournisseur import IFournisseur
-from app.core.config import settings
+from app.core.config import settings, properties, secrets
 from app.graphql.types.standardized_datasets import StandardDatasets, StandardResource
 
 
@@ -14,9 +14,9 @@ class FranceTransportFournisseur(IFournisseur):
         return "FR_TRANSPORT_GOUV"
 
     async def search(self) -> List[StandardDatasets]:
-        url = f"{settings.TRANSPORT_DATA_GOUV_API_URL}/datasets"
+        url = f"{properties.TRANSPORT_DATA_GOUV_API_URL}/datasets"
         headers = {}
-        headers["Authorize"] = settings.TRANSPORT_DATA_GOUV_API_TOKEN
+        headers["Authorize"] = secrets.TRANSPORT_DATA_GOUV_API_TOKEN
         async with httpx.AsyncClient(headers=headers) as client:
             response = await client.get(url)
             response.raise_for_status()
@@ -33,7 +33,7 @@ class FranceTransportFournisseur(IFournisseur):
         return results
 
     async def get_by_id(self, external_id: str) -> StandardDatasets | None:
-        url = f"{settings.TRANSPORT_DATA_GOUV_API_URL}/datasets/{external_id}"
+        url = f"{properties.TRANSPORT_DATA_GOUV_API_URL}/datasets/{external_id}"
 
         async with httpx.AsyncClient() as client:
             response = await client.get(url)

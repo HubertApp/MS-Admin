@@ -1,6 +1,6 @@
 from motor.motor_asyncio import AsyncIOMotorClient
-from app.core.config import settings
+from app.core.config import settings, properties
 
-client = AsyncIOMotorClient(settings.DATABASE_URL)
+client = AsyncIOMotorClient(properties.DATABASE_URL)
 db = client.admin_db
 registred_transit_network = db.registered_transit_network
