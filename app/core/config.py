@@ -4,6 +4,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Secrets(BaseSettings):
     TRANSPORT_DATA_GOUV_API_TOKEN: str = "<TOKEN>"
+    RABBITMQ_URL: str = "amqp://guest:guest@localhost:5672/"
+    DATABASE_URL: str = "<DATABASE_URL>"
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -19,8 +21,6 @@ class Properties(BaseSettings):
     GRAPHQL_PREFIX: str = "/graphql"
     LOG_LEVEL: str = "INFO"
     TRANSPORT_DATA_GOUV_API_URL: str = "<URL>"
-    RABBITMQ_URL: str = "amqp://guest:guest@localhost:5672/"
-    DATABASE_URL: str = "<DATABASE_URL>"
     model_config = SettingsConfigDict(
         env_file="application.properties",
         env_file_encoding="utf-8",
