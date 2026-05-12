@@ -6,7 +6,7 @@ from datetime import datetime
 class StandardResource:
     title: str
     format: str
-    download_url: str
+    endpoint_url: str
     updated_at: datetime
     filesize_bytes: Optional[int] = None
 

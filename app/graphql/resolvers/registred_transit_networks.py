@@ -1,4 +1,4 @@
-from app.graphql.types.registred_apis import PaginatedTransitNetworks
+from app.graphql.types.registred_transit_network import PaginatedTransitNetworks
 from app.services.transit_network_service import TransitNetworkService
 
 

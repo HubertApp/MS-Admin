@@ -4,7 +4,7 @@ from typing import List
 
 import httpx
 from app.clients.i_fournisseur import IFournisseur
-from app.core.config import settings, properties, secrets
+from app.core.config import properties, secrets
 from app.graphql.types.standardized_datasets import StandardDatasets, StandardResource
 
 
@@ -58,7 +58,7 @@ class FranceTransportFournisseur(IFournisseur):
             standard_resources.append(StandardResource(
                 title=res.get("title", "Sans titre"),
                 format=res.get("format", "Inconnu"),
-                download_url=res.get("url") or res.get("original_url", ""),
+                endpoint_url=res.get("url") or res.get("original_url", ""),
                 updated_at=updated_dt,
                 filesize_bytes=res.get("filesize")
             ))

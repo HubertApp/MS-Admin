@@ -5,7 +5,7 @@ from typing import List, Optional
 class ResourceInput:
     title: str
     format: str
-    download_url: str
+    endpoint_url: str
 
 @strawberry.input
 class DatasetsInput:

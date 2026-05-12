@@ -6,8 +6,8 @@ from datetime import datetime
 class Resource:
     title: str
     format: str
-    download_url: str
-    updated_at: datetime
+    endpoint_url: str
+    updated_at: Optional[datetime] = None
     filesize_bytes: Optional[int] = None
 
 @strawberry.type

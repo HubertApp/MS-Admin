@@ -5,7 +5,7 @@ import strawberry
 from app.graphql.inputs.registred_transit_networks import TransitNetworkInput
 from app.graphql.inputs.transit_network_datasets import DatasetsInput
 from app.graphql.resolvers.registred_transit_networks import resolve_get_registred_transit_network
-from app.graphql.types.registred_apis import TransitNetworks, PaginatedTransitNetworks
+from app.graphql.types.registred_transit_network import TransitNetworks, PaginatedTransitNetworks
 from app.graphql.types.standardized_datasets import StandardDatasets
 from app.graphql.resolvers.transit_network_datasets import resolve_search_datasets
 from app.services.transit_network_service import TransitNetworkService

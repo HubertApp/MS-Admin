@@ -2,7 +2,7 @@ import strawberry
 
 from app.core.database import registred_transit_network
 from app.graphql.inputs.registred_transit_networks import TransitNetworkInput
-from app.graphql.types.registred_apis import TransitNetworks, Resource
+from app.graphql.types.registred_transit_network import TransitNetworks, Resource
 
 
 class TransitNetworkService:
@@ -17,6 +17,9 @@ class TransitNetworkService:
 
         await registred_transit_network.insert_one(tn_dict)
         tn_dict.pop("_id", None)
+        if tn_dict.get("resources"):
+            tn_dict["resources"] = [Resource(**res) for res in tn_dict["resources"]]
+        print(tn_dict, flush=True)
         return TransitNetworks(**tn_dict)
 
     @staticmethod

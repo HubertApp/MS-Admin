@@ -1,5 +1,5 @@
 from motor.motor_asyncio import AsyncIOMotorClient
-from app.core.config import settings, properties
+from app.core.config import secrets, properties
 
 client = AsyncIOMotorClient(properties.DATABASE_URL)
 db = client.admin_db
