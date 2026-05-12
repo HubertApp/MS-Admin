@@ -3,9 +3,10 @@ import asyncio
 import logging
 from faststream import FastStream
 from app.core.broker import broker
+from app.core.config import properties
 from app.workers.callbacks.email import email_router
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=properties.LOG_LEVEL)
 broker.include_router(email_router)
 
 app = FastStream(broker)

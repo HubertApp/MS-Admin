@@ -1,16 +1,23 @@
 from fastapi import FastAPI, Depends
 from strawberry.fastapi import GraphQLRouter
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.database import get_db_session
-from app.graphql.schema import schema
 
-async def get_context(db: AsyncSession = Depends(get_db_session)):
-    return {"db": db}
+from app.core.config import properties
+from app.graphql.schema import schema
+from fastapi.middleware.cors import CORSMiddleware
+
+
 
 graphql_app = GraphQLRouter(
-    schema, 
-    context_getter=get_context
+    schema
 )
  
 app = FastAPI()
-app.include_router(graphql_app, prefix="/graphql")
+app.include_router(graphql_app, prefix=properties.GRAPHQL_PREFIX)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
