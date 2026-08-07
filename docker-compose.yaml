@@ -18,7 +18,7 @@ services:
       retries: 10
       start_period: 30s
     networks:
-      - ms-admin-network
+      - microservices
 
   mongodb:
     container_name: mongodb-hubbert
@@ -37,7 +37,7 @@ services:
       retries: 5
       start_period: 10s
     networks:
-      - ms-admin-network
+      - microservices
 
   app:
     build: .
@@ -57,7 +57,7 @@ services:
       mongodb:
         condition: service_healthy
     networks:
-      - ms-admin-network
+      - microservices
   # worker:
   #   build: .
   #   container_name: ms-admin-worker
@@ -82,5 +82,5 @@ volumes:
   mongodb_data:
 
 networks:
-   ms-admin-network:
+   microservices:
     driver: bridge  

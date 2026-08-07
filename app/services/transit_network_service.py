@@ -1,8 +1,11 @@
 import strawberry
 
+from app.core.broker import broker
 from app.core.database import registred_transit_network
 from app.graphql.inputs.registred_transit_networks import TransitNetworkInput
 from app.graphql.types.registred_transit_network import TransitNetworks, Resource
+
+GTFS_QUEUE = "gtfs.file.available"
 
 
 class TransitNetworkService:
@@ -20,7 +23,22 @@ class TransitNetworkService:
         if tn_dict.get("resources"):
             tn_dict["resources"] = [Resource(**res) for res in tn_dict["resources"]]
         print(tn_dict, flush=True)
+
+        gtfs_url = TransitNetworkService._resolve_gtfs_url(data)
+        if gtfs_url:
+            await broker.publish(
+                {"url": gtfs_url, "network_id": data.external_id},
+                queue=GTFS_QUEUE,
+            )
+
         return TransitNetworks(**tn_dict)
+
+    @staticmethod
+    def _resolve_gtfs_url(data: TransitNetworkInput):
+        for resource in data.resources or []:
+            if resource.format.strip().upper() == "GTFS":
+                return resource.endpoint_url
+        return data.endpoint_url
 
     @staticmethod
     async def update_transit_network(external_id: str, data: TransitNetworkInput) -> TransitNetworks:
