@@ -3,7 +3,9 @@ import strawberry
 from app.core.broker import broker
 from app.core.database import registred_transit_network
 from app.graphql.inputs.registred_transit_networks import TransitNetworkInput
-from app.graphql.types.registred_transit_network import TransitNetworks, Resource
+from app.graphql.types.registred_transit_network import TransitNetwork, Resource
+
+GTFS_QUEUE = "gtfs.file.available"
 
 GTFS_QUEUE = "gtfs.file.available"
 
@@ -11,7 +13,7 @@ GTFS_QUEUE = "gtfs.file.available"
 class TransitNetworkService:
 
     @staticmethod
-    async def create_transit_network(data: TransitNetworkInput) -> TransitNetworks:
+    async def create_transit_network(data: TransitNetworkInput) -> TransitNetwork:
         tn_dict = strawberry.asdict(data)
 
         existing = await registred_transit_network.find_one({"external_id": data.external_id})
@@ -31,7 +33,7 @@ class TransitNetworkService:
                 queue=GTFS_QUEUE,
             )
 
-        return TransitNetworks(**tn_dict)
+        return TransitNetwork(**tn_dict)
 
     @staticmethod
     def _resolve_gtfs_url(data: TransitNetworkInput):
@@ -41,7 +43,7 @@ class TransitNetworkService:
         return data.endpoint_url
 
     @staticmethod
-    async def update_transit_network(external_id: str, data: TransitNetworkInput) -> TransitNetworks:
+    async def update_transit_network(external_id: str, data: TransitNetworkInput) -> TransitNetwork:
         tn_dict = strawberry.asdict(data)
 
         result = await registred_transit_network.update_one(
@@ -52,7 +54,7 @@ class TransitNetworkService:
         if result.matched_count == 0:
             raise ValueError("API introuvable.")
 
-        return TransitNetworks(**tn_dict)
+        return TransitNetwork(**tn_dict)
 
     @staticmethod
     async def delete_transit_network(external_id: str) -> bool:
@@ -71,7 +73,7 @@ class TransitNetworkService:
             tn.pop("_id", None)
             raw_resources = tn.get("resources") or []
             tn["resources"] = [Resource(**res) for res in raw_resources]
-            resultats.append(TransitNetworks(**tn))
+            resultats.append(TransitNetwork(**tn))
         return {
             "total_count": total_count,
             "total_pages": (total_count + limit - 1) // limit if limit > 0 else 0,

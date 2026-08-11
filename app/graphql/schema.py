@@ -5,7 +5,7 @@ import strawberry
 from app.graphql.inputs.registred_transit_networks import TransitNetworkInput
 from app.graphql.inputs.transit_network_datasets import DatasetsInput
 from app.graphql.resolvers.registred_transit_networks import resolve_get_registred_transit_network
-from app.graphql.types.registred_transit_network import TransitNetworks, PaginatedTransitNetworks
+from app.graphql.types.registred_transit_network import TransitNetwork, PaginatedTransitNetworks
 from app.graphql.types.standardized_datasets import StandardDatasets
 from app.graphql.resolvers.transit_network_datasets import resolve_search_datasets
 from app.services.transit_network_service import TransitNetworkService
@@ -21,11 +21,11 @@ class Query:
 class Mutation:
 
     @strawberry.mutation
-    async def create_transit_network(self, data: TransitNetworkInput) -> TransitNetworks:
+    async def create_transit_network(self, data: TransitNetworkInput) -> TransitNetwork:
         return await TransitNetworkService.create_transit_network(data)
 
     @strawberry.mutation
-    async def update_transit_network(self, external_id: str, data: TransitNetworkInput) -> TransitNetworks:
+    async def update_transit_network(self, external_id: str, data: TransitNetworkInput) -> TransitNetwork:
         return await TransitNetworkService.update_transit_network(external_id, data)
 
     @strawberry.mutation
@@ -34,5 +34,6 @@ class Mutation:
 
 schema = strawberry.federation.Schema(
     query=Query,
-    mutation=Mutation
+    mutation=Mutation,
+    federation_version="2.0"
 )
