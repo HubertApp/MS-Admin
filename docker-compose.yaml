@@ -35,30 +35,8 @@ services:
         condition: service_healthy
     networks:
       hubert-network:
-        # Le container_name contient un underscore, invalide dans un nom d'hôte
-        # DNS : le resolver du routeur Apollo le rejette. On expose donc un
-        # alias en tirets, comme le font déjà service-auth et service-user.
         aliases:
           - service-admin
-  # worker:
-  #   build: .
-  #   container_name: ms-admin-worker
-  #   ports:
-  #     - "8000:80"
-  #   volumes:
-  #     - ./app:/project/app
-  #   command: python -m uvicorn app.run_worker:app --host 0.0.0.0 --port 80 --reload --reload-dir /project/app
-  #   environment:
-  #     - DATABASE_URL=postgresql+asyncpg://user:password@db/ms_admin_db
-  #     - RABBITMQ_URL=amqp://user:password@broker:5672
-  #   depends_on:
-  #     broker:
-  #       condition: service_healthy
-  #     db:
-  #       condition: service_healthy
-  #   networks:
-  #     - ms-admin-network
-
 volumes:
   mongodb_data:
 

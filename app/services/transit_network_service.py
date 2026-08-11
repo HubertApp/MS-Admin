@@ -7,6 +7,8 @@ from app.graphql.types.registred_transit_network import TransitNetwork, Resource
 
 GTFS_QUEUE = "gtfs.file.available"
 
+GTFS_QUEUE = "gtfs.file.available"
+
 
 class TransitNetworkService:
 
