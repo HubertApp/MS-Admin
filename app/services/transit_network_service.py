@@ -1,14 +1,17 @@
 import strawberry
 
+from app.core.broker import broker
 from app.core.database import registred_transit_network
 from app.graphql.inputs.registred_transit_networks import TransitNetworkInput
-from app.graphql.types.registred_transit_network import TransitNetworks, Resource
+from app.graphql.types.registred_transit_network import TransitNetwork, Resource
+
+GTFS_QUEUE = "gtfs.file.available"
 
 
 class TransitNetworkService:
 
     @staticmethod
-    async def create_transit_network(data: TransitNetworkInput) -> TransitNetworks:
+    async def create_transit_network(data: TransitNetworkInput) -> TransitNetwork:
         tn_dict = strawberry.asdict(data)
 
         existing = await registred_transit_network.find_one({"external_id": data.external_id})
@@ -20,10 +23,25 @@ class TransitNetworkService:
         if tn_dict.get("resources"):
             tn_dict["resources"] = [Resource(**res) for res in tn_dict["resources"]]
         print(tn_dict, flush=True)
-        return TransitNetworks(**tn_dict)
+
+        gtfs_url = TransitNetworkService._resolve_gtfs_url(data)
+        if gtfs_url:
+            await broker.publish(
+                {"url": gtfs_url, "network_id": data.external_id},
+                queue=GTFS_QUEUE,
+            )
+
+        return TransitNetwork(**tn_dict)
 
     @staticmethod
-    async def update_transit_network(external_id: str, data: TransitNetworkInput) -> TransitNetworks:
+    def _resolve_gtfs_url(data: TransitNetworkInput):
+        for resource in data.resources or []:
+            if resource.format.strip().upper() == "GTFS":
+                return resource.endpoint_url
+        return data.endpoint_url
+
+    @staticmethod
+    async def update_transit_network(external_id: str, data: TransitNetworkInput) -> TransitNetwork:
         tn_dict = strawberry.asdict(data)
 
         result = await registred_transit_network.update_one(
@@ -34,7 +52,7 @@ class TransitNetworkService:
         if result.matched_count == 0:
             raise ValueError("API introuvable.")
 
-        return TransitNetworks(**tn_dict)
+        return TransitNetwork(**tn_dict)
 
     @staticmethod
     async def delete_transit_network(external_id: str) -> bool:
@@ -53,7 +71,7 @@ class TransitNetworkService:
             tn.pop("_id", None)
             raw_resources = tn.get("resources") or []
             tn["resources"] = [Resource(**res) for res in raw_resources]
-            resultats.append(TransitNetworks(**tn))
+            resultats.append(TransitNetwork(**tn))
         return {
             "total_count": total_count,
             "total_pages": (total_count + limit - 1) // limit if limit > 0 else 0,
