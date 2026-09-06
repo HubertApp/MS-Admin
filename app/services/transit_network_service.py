@@ -2,12 +2,13 @@ import strawberry
 
 from app.core.broker import broker
 from app.core.database import registred_transit_network
+from app.core.topology import GTFS_FILE_AVAILABLE
 from app.graphql.inputs.registred_transit_networks import TransitNetworkInput
-from app.graphql.types.registred_transit_network import TransitNetwork, Resource
-
-GTFS_QUEUE = "gtfs.file.available"
-
-GTFS_QUEUE = "gtfs.file.available"
+from app.graphql.types.registred_transit_network import (
+    TransitNetwork,
+    TransitNetworkStatus,
+    build_transit_network,
+)
 
 
 class TransitNetworkService:
@@ -20,31 +21,77 @@ class TransitNetworkService:
         if existing:
             raise ValueError(f"L'API avec l'external_id {data.external_id} existe déjà.")
 
-        await registred_transit_network.insert_one(tn_dict)
-        tn_dict.pop("_id", None)
-        if tn_dict.get("resources"):
-            tn_dict["resources"] = [Resource(**res) for res in tn_dict["resources"]]
-        print(tn_dict, flush=True)
+        status = data.status or TransitNetworkStatus.PENDING_AGGREGATION
+        tn_dict["status"] = status.value
 
-        gtfs_url = TransitNetworkService._resolve_gtfs_url(data)
+        await registred_transit_network.insert_one(tn_dict)
+
+        gtfs_url, gtfs_format = TransitNetworkService._resolve_gtfs_source(data)
         if gtfs_url:
             await broker.publish(
-                {"url": gtfs_url, "network_id": data.external_id},
-                queue=GTFS_QUEUE,
+                {
+                    "network_id": data.external_id,
+                    "url": gtfs_url,
+                    "format": gtfs_format,
+                },
+                queue=GTFS_FILE_AVAILABLE,
+                persist=True,
             )
 
-        return TransitNetwork(**tn_dict)
+        return build_transit_network(tn_dict)
 
     @staticmethod
-    def _resolve_gtfs_url(data: TransitNetworkInput):
+    def _resolve_gtfs_source(data: TransitNetworkInput):
         for resource in data.resources or []:
-            if resource.format.strip().upper() == "GTFS":
-                return resource.endpoint_url
-        return data.endpoint_url
+            resource_format = resource.format.strip().upper()
+            if resource_format == "GTFS":
+                return resource.endpoint_url, resource_format
+        return data.endpoint_url, "GTFS"
+
+    @staticmethod
+    async def set_status(external_id: str, status: TransitNetworkStatus) -> bool:
+        result = await registred_transit_network.update_one(
+            {"external_id": external_id},
+            {"$set": {"status": status.value}},
+        )
+        return result.matched_count > 0
+
+    @staticmethod
+    async def retrigger_aggregation(external_id: str) -> TransitNetwork:
+        doc = await registred_transit_network.find_one({"external_id": external_id})
+        if not doc:
+            raise ValueError(f"Réseau introuvable : {external_id}")
+
+        network = build_transit_network(doc)
+        gtfs_url, gtfs_format = TransitNetworkService._resolve_gtfs_source(network)
+        if not gtfs_url:
+            raise ValueError(
+                f"Aucune source GTFS exploitable pour {external_id} : "
+                "ni ressource au format GTFS, ni endpointUrl."
+            )
+
+        await broker.publish(
+            {
+                "network_id": external_id,
+                "url": gtfs_url,
+                "format": gtfs_format,
+            },
+            queue=GTFS_FILE_AVAILABLE,
+            persist=True,
+        )
+
+        await TransitNetworkService.set_status(external_id, TransitNetworkStatus.PENDING_AGGREGATION)
+        network.status = TransitNetworkStatus.PENDING_AGGREGATION
+        return network
 
     @staticmethod
     async def update_transit_network(external_id: str, data: TransitNetworkInput) -> TransitNetwork:
         tn_dict = strawberry.asdict(data)
+
+        if data.status is None:
+            tn_dict.pop("status", None)
+        else:
+            tn_dict["status"] = data.status.value
 
         result = await registred_transit_network.update_one(
             {"external_id": external_id},
@@ -54,7 +101,8 @@ class TransitNetworkService:
         if result.matched_count == 0:
             raise ValueError("API introuvable.")
 
-        return TransitNetwork(**tn_dict)
+        doc = await registred_transit_network.find_one({"external_id": external_id})
+        return build_transit_network(doc)
 
     @staticmethod
     async def delete_transit_network(external_id: str) -> bool:
@@ -68,12 +116,7 @@ class TransitNetworkService:
         cursor = registred_transit_network.find(filtre).skip(offset).limit(limit)
         tn_in_db = await cursor.to_list(length=limit)
 
-        resultats = []
-        for tn in tn_in_db:
-            tn.pop("_id", None)
-            raw_resources = tn.get("resources") or []
-            tn["resources"] = [Resource(**res) for res in raw_resources]
-            resultats.append(TransitNetwork(**tn))
+        resultats = [build_transit_network(tn) for tn in tn_in_db]
         return {
             "total_count": total_count,
             "total_pages": (total_count + limit - 1) // limit if limit > 0 else 0,
