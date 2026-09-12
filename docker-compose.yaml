@@ -1,6 +1,6 @@
 services:
   mongodb:
-    container_name: mongodb-hubbert
+    container_name: mongodb-admin
     image: mongo:latest
     environment:
       MONGO_INITDB_ROOT_USERNAME: "mongouser"
@@ -37,6 +37,23 @@ services:
       hubert-network:
         aliases:
           - service-admin
+
+  worker:
+    build: .
+    container_name: ms-admin-worker
+    volumes:
+      - .:/project
+    command: python -m app.run_worker
+    env_file:
+      - .env
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - hubert-network
+
 volumes:
   mongodb_data:
 

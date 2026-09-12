@@ -29,6 +29,10 @@ class Mutation:
         return await TransitNetworkService.update_transit_network(external_id, data)
 
     @strawberry.mutation
+    async def retrigger_aggregation(self, external_id: str) -> TransitNetwork:
+        return await TransitNetworkService.retrigger_aggregation(external_id)
+
+    @strawberry.mutation
     async def delete_transit_network(self, external_id: str) -> bool:
         return await TransitNetworkService.delete_transit_network(external_id)
 
