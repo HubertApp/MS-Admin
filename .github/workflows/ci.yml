@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Un nouveau push sur une branche déjà en cours de test annule le run précédent,
+# pour ne pas empiler les jobs sur une série de commits rapprochés.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Le workflow ne fait que lire le dépôt : le GITHUB_TOKEN est restreint en lecture.
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Lint & tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer uv
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      # --locked échoue si uv.lock n'est plus cohérent avec pyproject.toml et
+      # --no-build n'installe que des wheels, sans exécuter de script de build.
+      # uv installe au passage la version de Python fixée par .python-version.
+      - name: Installer les dépendances
+        run: uv sync --group dev --locked --no-build
+
+      - name: Lint
+        run: uv run --locked --no-build ruff check .
+
+      # La suite tourne hors ligne (MongoDB, RabbitMQ et l'API externe sont
+      # simulés) : aucun service ni conteneur n'est nécessaire. Le seuil de
+      # couverture (85 %) est défini dans pyproject.toml.
+      - name: Tests
+        run: uv run --locked --no-build pytest -q --cov

@@ -17,3 +17,33 @@ dependencies = [
     "strawberry-graphql[fastapi]>=0.288.1",
     "uvicorn>=0.40.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "mongomock-motor>=0.0.36",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.coverage.run]
+source = ["app"]
+omit = [
+    # Câblage FastAPI/lifespan : testé en smoke test, sans valeur de couverture.
+    "app/main.py",
+    # Point d'entrée du worker.
+    "app/run_worker.py",
+    # Base SQLAlchemy inutilisée (le service est sur MongoDB).
+    "app/models/*",
+    # Script manuel de publication, malgré son nom ce n'est pas un test.
+    "app/test_ingestion_publisher.py",
+]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
