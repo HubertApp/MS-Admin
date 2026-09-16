@@ -43,9 +43,10 @@ class TestCreateTransitNetwork:
         self, mongo_collection, published, network_input, network_doc
     ):
         await mongo_collection.insert_one(network_doc())
+        data = network_input(endpoint_url=URL_GTFS)
 
         with pytest.raises(ValueError, match="net-1 existe déjà"):
-            await TransitNetworkService.create_transit_network(network_input(endpoint_url=URL_GTFS))
+            await TransitNetworkService.create_transit_network(data)
 
         assert await mongo_collection.count_documents({}) == 1
         published.assert_not_awaited()
@@ -167,8 +168,10 @@ class TestUpdateTransitNetwork:
         assert stocke["status"] == "OUT_OF_SERVICE"
 
     async def test_refuse_un_reseau_introuvable(self, mongo_collection, network_input):
+        data = network_input()
+
         with pytest.raises(ValueError, match="API introuvable."):
-            await TransitNetworkService.update_transit_network("absent", network_input())
+            await TransitNetworkService.update_transit_network("absent", data)
 
 
 class TestDeleteTransitNetwork:
