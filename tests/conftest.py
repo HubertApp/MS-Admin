@@ -59,6 +59,10 @@ def published(monkeypatch):
 def http_mock(monkeypatch):
     """Installe un handler HTTP à la place de l'API transport.data.gouv.
 
+    Le patch cible `httpx.AsyncClient` sur le module `httpx` partagé (celui
+    importé par `france_transport_module`), donc pour tout le process
+    pendant la durée du test ; `monkeypatch` restaure l'original ensuite.
+
     Renvoie la liste des requêtes reçues, remplie au fil des appels.
     """
     vrai_client = httpx.AsyncClient
@@ -73,7 +77,7 @@ def http_mock(monkeypatch):
         monkeypatch.setattr(
             france_transport_module.httpx,
             "AsyncClient",
-            lambda **kwargs: vrai_client(transport=httpx.MockTransport(enregistrer), **kwargs),
+            lambda *args, **kwargs: vrai_client(*args, transport=httpx.MockTransport(enregistrer), **kwargs),
         )
         return requetes
 

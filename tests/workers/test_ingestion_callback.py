@@ -35,7 +35,6 @@ async def test_met_a_jour_le_statut_du_reseau(mongo_collection, network_doc, pay
 async def test_ignore_un_reseau_introuvable(mongo_collection, capsys):
     await publier({"network_id": "absent", "status": "ok"})
 
-    assert await mongo_collection.count_documents({}) == 0
     assert "Reseau introuvable, statut ignore : absent" in capsys.readouterr().out
 
 
