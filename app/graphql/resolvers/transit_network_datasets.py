@@ -1,4 +1,3 @@
-import strawberry
 from typing import List
 
 from app.clients.factory import FournisseurFactory

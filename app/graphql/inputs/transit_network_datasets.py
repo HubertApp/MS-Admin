@@ -1,5 +1,5 @@
 import strawberry
-from typing import List, Optional
+from typing import List
 
 @strawberry.input
 class ResourceInput:
