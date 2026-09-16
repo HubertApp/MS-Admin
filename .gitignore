@@ -5,3 +5,10 @@
 .coverage
 coverage.xml
 htmlcov/
+
+# Outillage IA local
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.superpowers/
+docs/superpowers/
