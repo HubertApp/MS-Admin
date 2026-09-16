@@ -8,7 +8,7 @@ Motor est paresseux : aucune connexion n'est ouverte.
 import os
 
 os.environ["DATABASE_URL"] = "mongodb://localhost:27017"
-os.environ["RABBITMQ_URL"] = "amqp://guest:guest@localhost:5672/"
+os.environ["RABBITMQ_URL"] = "amqp://localhost:5672/"
 os.environ["TRANSPORT_DATA_GOUV_API_URL"] = "https://transport.test/api"
 os.environ["TRANSPORT_DATA_GOUV_API_TOKEN"] = "test-token"
 

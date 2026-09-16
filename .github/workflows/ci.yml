@@ -10,6 +10,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Le workflow ne fait que lire le dépôt : le GITHUB_TOKEN est restreint en lecture.
+permissions:
+  contents: read
+
 jobs:
   tests:
     name: Lint & tests
