@@ -187,3 +187,22 @@ make supergraph   # depuis la racine du monorepo
 ```
 
 La recomposition introspecte les sept subgraphs et échoue si un seul manque à l'appel : ils doivent tous être démarrés.
+
+## Tests
+
+La suite tourne entièrement hors ligne : MongoDB, RabbitMQ et l'API
+transport.data.gouv sont simulés en mémoire, aucun conteneur n'est nécessaire.
+
+```bash
+uv sync --group dev
+uv run ruff check .
+uv run pytest --cov
+```
+
+Le seuil de couverture (85 %) et les fichiers exclus sont définis dans
+`pyproject.toml`. La CI (`.github/workflows/ci.yml`) exécute exactement ces
+commandes.
+
+Les bugs connus et non corrigés sont documentés par des tests
+`xfail(strict=True)` : quand un bug est corrigé, son test passe, la suite
+échoue, et il faut retirer le marqueur `xfail`.
