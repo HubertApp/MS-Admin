@@ -1,7 +1,6 @@
 # run_worker.py
 
 from app.core.otel_setup import setup_otel
-
 setup_otel()
 
 import asyncio
@@ -9,10 +8,11 @@ import logging
 from faststream import FastStream
 from app.core.broker import broker
 from app.core.config import properties
-from app.workers.callbacks.email import email_router
+from app.workers.callbacks.ingestion_callback import router
 
-logging.basicConfig(level=properties.LOG_LEVEL)
-broker.include_router(email_router)
+logging.basicConfig(level=properties.LOG_LEVEL.upper())
+
+broker.include_router(router)
 
 app = FastStream(broker)
 

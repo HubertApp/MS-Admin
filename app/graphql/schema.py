@@ -3,7 +3,6 @@ from typing import List
 import strawberry
 
 from app.graphql.inputs.registred_transit_networks import TransitNetworkInput
-from app.graphql.inputs.transit_network_datasets import DatasetsInput
 from app.graphql.resolvers.registred_transit_networks import resolve_get_registred_transit_network
 from app.graphql.types.registred_transit_network import TransitNetwork, PaginatedTransitNetworks
 from app.graphql.types.standardized_datasets import StandardDatasets
@@ -27,6 +26,10 @@ class Mutation:
     @strawberry.mutation
     async def update_transit_network(self, external_id: str, data: TransitNetworkInput) -> TransitNetwork:
         return await TransitNetworkService.update_transit_network(external_id, data)
+
+    @strawberry.mutation
+    async def retrigger_aggregation(self, external_id: str) -> TransitNetwork:
+        return await TransitNetworkService.retrigger_aggregation(external_id)
 
     @strawberry.mutation
     async def delete_transit_network(self, external_id: str) -> bool:

@@ -11,9 +11,45 @@ dependencies = [
     "faststream[rabbit]>=0.6.5",
     "httpx>=0.28.1",
     "motor>=3.7.1",
+    "opentelemetry-exporter-otlp-proto-grpc==1.44.0",
+    "opentelemetry-instrumentation-fastapi==0.65b0",
+    "opentelemetry-instrumentation-httpx==0.65b0",
+    "opentelemetry-instrumentation-logging==0.65b0",
+    "opentelemetry-instrumentation-system-metrics==0.65b0",
+    "opentelemetry-sdk==1.44.0",
     "pydantic-settings>=2.12.0",
     "ruff>=0.14.10",
     "sqlalchemy>=2.0.46",
     "strawberry-graphql[fastapi]>=0.288.1",
     "uvicorn>=0.40.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "mongomock-motor>=0.0.36",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.coverage.run]
+source = ["app"]
+omit = [
+    # Câblage FastAPI/lifespan : testé en smoke test, sans valeur de couverture.
+    "app/main.py",
+    # Point d'entrée du worker.
+    "app/run_worker.py",
+    # Base SQLAlchemy inutilisée (le service est sur MongoDB).
+    "app/models/*",
+    # Script manuel de publication, malgré son nom ce n'est pas un test.
+    "app/test_ingestion_publisher.py",
+]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
