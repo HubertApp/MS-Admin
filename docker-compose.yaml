@@ -21,6 +21,9 @@ services:
   app:
     build: .
     container_name: service_admin
+    labels:
+      logging: "promtail"
+      service: "service-admin"
     ports:
       - "8001:80"
     volumes:
@@ -30,13 +33,11 @@ services:
       - .env
     environment:
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    networks:
-      hubert-network:
-        aliases:
-          - service-admin
+      - PYTHONUNBUFFERED=1
+      - OTEL_SERVICE_NAME=service-admin
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_LOGS_EXPORTER=none
+      
 volumes:
   mongodb_data:
 
