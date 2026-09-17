@@ -1,3 +1,8 @@
+# run_worker.py
+
+from app.core.otel_setup import setup_otel
+setup_otel()
+
 import asyncio
 import logging
 from faststream import FastStream

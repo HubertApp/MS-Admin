@@ -1,3 +1,7 @@
+from app.core.otel_setup import setup_otel, instrument_fastapi
+
+setup_otel()
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -33,3 +37,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+instrument_fastapi(app)
