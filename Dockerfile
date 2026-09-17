@@ -15,7 +15,7 @@ ENV UV_PROJECT_ENVIRONMENT="/opt/venv"
 
 WORKDIR /project
 
-COPY pyproject.toml uv.lock .env ./
+COPY pyproject.toml uv.lock ./
 
 # UV va maintenant installer dans /opt/venv
 RUN uv sync
