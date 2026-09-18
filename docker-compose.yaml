@@ -37,7 +37,38 @@ services:
       - OTEL_SERVICE_NAME=service-admin
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_LOGS_EXPORTER=none
-      
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      hubert-network:
+        aliases:
+          - service-admin
+
+  # Consomme gtfs.ingestion.result (retour de MS-aom-agregator) et met à jour le statut du réseau
+  worker:
+    build: .
+    container_name: ms-admin-worker
+    labels:
+      logging: "enabled"
+      service: "admin-worker"
+    volumes:
+      - .:/project
+    command: python -m app.run_worker
+    env_file:
+      - .env
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - PYTHONUNBUFFERED=1
+      - OTEL_SERVICE_NAME=admin-worker
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_LOGS_EXPORTER=none
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - hubert-network
+
 volumes:
   mongodb_data:
 
