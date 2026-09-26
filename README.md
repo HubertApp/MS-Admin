@@ -129,7 +129,7 @@ MS-notifications est un service NestJS : son transport RabbitMQ attend l'envelop
 }
 ```
 
-Le destinataire vient de `ADMIN_NOTIFICATION_EMAIL` (variable d'environnement de MS-Admin, lue par `Properties`) ; sans elle, le worker logue `Notification admin ignoree` et ne publie rien. `ADMIN_USER_ID` (défaut `admin`) n'est qu'une clé de persistance côté MS-notifications, elle ne correspond à aucun compte MS-User. `type` (`AGGREGATION_SUCCESS` / `AGGREGATION_ERROR`) n'est qu'une étiquette : MS-notifications ne l'interprète pas.
+Le destinataire vient de `ADMIN_NOTIFICATION_EMAIL`, dans `application.properties` (surchargeable par variable d'environnement) ; sans elle, le worker logue `Notification admin ignoree` et ne publie rien. `ADMIN_USER_ID` (défaut `admin`) n'est qu'une clé de persistance côté MS-notifications, elle ne correspond à aucun compte MS-User. `type` (`AGGREGATION_SUCCESS` / `AGGREGATION_ERROR`) n'est qu'une étiquette : MS-notifications ne l'interprète pas.
 
 **Cette queue n'est pas déclarée dans `app/core/topology.py`**, qui reste le miroir strict de MS-aom-agregator. Elle l'est par le worker au démarrage (`app/run_worker.py`), car `broker.publish` ne déclare rien : sans ça, un résultat traité avant le premier démarrage de MS-notifications perdrait sa notification, le message étant non routable. Ses paramètres (`durable`, rien d'autre) reproduisent ceux du `src/main.ts` de MS-notifications ; toute divergence provoquerait un `PRECONDITION_FAILED`.
 
