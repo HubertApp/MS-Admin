@@ -37,6 +37,13 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["."]
 
+[tool.ruff.lint.per-file-ignores]
+# L'instrumentation OpenTelemetry doit être posée avant l'import des modules
+# qu'elle instrumente : dans ces deux points d'entrée, les imports ne peuvent
+# pas remonter en tête de fichier.
+"app/main.py" = ["E402"]
+"app/run_worker.py" = ["E402"]
+
 [tool.coverage.run]
 source = ["app"]
 omit = [
