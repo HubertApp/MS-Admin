@@ -19,6 +19,10 @@ class Properties(BaseSettings):
     GRAPHQL_PREFIX: str = "/graphql"
     LOG_LEVEL: str = "INFO"
     TRANSPORT_DATA_GOUV_API_URL: str = "<URL>"
+    # Destinataire du mail de fin d'agregation. Vide : aucune notification.
+    ADMIN_NOTIFICATION_EMAIL: str = ""
+    # Cle de persistance cote MS-notifications, ne correspond a aucun compte MS-User.
+    ADMIN_USER_ID: str = "admin"
     model_config = SettingsConfigDict(
         env_file="application.properties",
         env_file_encoding="utf-8",

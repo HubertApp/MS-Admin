@@ -36,7 +36,7 @@ flowchart LR
     AGG -- "gtfs.ingestion.result<br/>network_id, status, error" --> WRK
     WRK --> DB
     DB --> API
-    WRK -- "transit_network_aggregated<br/>notifications_queue" --> NOTIF["MS-notifications<br/>mail à l'admin"]
+    WRK -- "notification_requested<br/>notifications_queue" --> NOTIF["MS-notifications<br/>mail à l'admin"]
 ```
 
 La boucle de retour est complète : l'agrégateur publie le résultat de chaque ingestion sur `gtfs.ingestion.result`, succès comme échec, et le worker le consomme pour faire avancer le statut. **Ce publisher n'existe toutefois que sur la branche `develop` de MS-aom-agregator, pas encore sur sa `main`.** Un agrégateur déployé depuis `main` ingère les données sans jamais renvoyer d'accusé : les arrêts et les lignes sont bien en base et servis par l'API, mais le réseau reste indéfiniment « en attente d'agrégation » ici, et un échec d'ingestion devient indistinguable d'une ingestion en cours.
@@ -105,26 +105,31 @@ Consommé par le **worker**. Validé par pydantic : `status` n'accepte que `ok` 
 
 Côté MS-aom-agregator, le publisher est en place dans `app/workers/callbacks/gtfs_callback.py` sur la branche `develop` : le traitement est encadré d'un `try/except` qui publie dans les deux cas, le champ `format` du message entrant est transmis à la `ParserFactory` au lieu du `"GTFS"` codé en dur, et l'exception est relancée après publication (politique `REJECT_ON_ERROR`, donc pas de remise en file). Il est en revanche **absent de la `main` de MS-aom-agregator**. `app/test_ingestion_publisher.py` reste le moyen de tester la boucle sans lancer l'agrégateur.
 
-### Sortant : `transit_network_aggregated`
+### Sortant : `notification_requested`
 
 Émis par le **worker** après chaque résultat d'ingestion traité pour un réseau connu, succès comme échec, sur la queue `notifications_queue`. Message persistant, queue durable.
 
 MS-notifications est un service NestJS : son transport RabbitMQ attend l'enveloppe qu'un `ClientProxy.emit()` produirait. MS-Admin étant en Python, `app/workers/publishers/notification_publisher.py` la construit à la main.
 
+`notification_requested` est un contrat générique : MS-notifications ne rédige ni ne décide rien, il persiste puis livre tel quel. **Destinataire, objet et texte du mail sont donc décidés ici**, dans `_rediger_notification` de `app/workers/callbacks/ingestion_callback.py`.
+
 ```json
 {
-  "pattern": "transit_network_aggregated",
+  "pattern": "notification_requested",
   "data": {
-    "network_id": "63b4c3d2d7857ab0c49dde9a",
-    "network_name": "Réseau de Paris",
-    "status": "ok",
-    "error": null,
+    "user_id": "admin",
+    "recipient_email": "admin@example.com",
+    "subject": "Échec d'agrégation — HubertApp",
+    "content": "L'agrégation du réseau « Réseau de Paris » a échoué : flux corrompu",
+    "type": "AGGREGATION_ERROR",
+    "channels": ["EMAIL"],
+    "triggered_by": "ms-admin",
     "occurred_at": "2026-09-26T12:00:00+00:00"
   }
 }
 ```
 
-Le `status` reprend tel quel le vocabulaire de `gtfs.ingestion.result` : la traduction en objet de mail et en libellé appartient à MS-notifications, qui expédie le message au compte de son `ADMIN_NOTIFICATION_EMAIL`. Sans cette variable, l'événement y est logué puis ignoré.
+Le destinataire vient de `ADMIN_NOTIFICATION_EMAIL` (variable d'environnement de MS-Admin, lue par `Properties`) ; sans elle, le worker logue `Notification admin ignoree` et ne publie rien. `ADMIN_USER_ID` (défaut `admin`) n'est qu'une clé de persistance côté MS-notifications, elle ne correspond à aucun compte MS-User. `type` (`AGGREGATION_SUCCESS` / `AGGREGATION_ERROR`) n'est qu'une étiquette : MS-notifications ne l'interprète pas.
 
 **Cette queue n'est pas déclarée dans `app/core/topology.py`**, qui reste le miroir strict de MS-aom-agregator. Elle l'est par le worker au démarrage (`app/run_worker.py`), car `broker.publish` ne déclare rien : sans ça, un résultat traité avant le premier démarrage de MS-notifications perdrait sa notification, le message étant non routable. Ses paramètres (`durable`, rien d'autre) reproduisent ceux du `src/main.ts` de MS-notifications ; toute divergence provoquerait un `PRECONDITION_FAILED`.
 
@@ -208,7 +213,7 @@ Les variables d'environnement priment sur les deux : le compose surcharge `RABBI
 
    ```bash
    docker logs ms-admin-worker | grep "Notification admin"
-   docker logs service-notifications | grep -E "transit_network_aggregated|E-mail envoyé|Livraison"
+   docker logs service-notifications | grep -E "notification_requested|E-mail envoyé|Livraison"
    ```
 
    **`Livraison "EMAIL" réussie` ne prouve pas qu'un mail est parti.** Si `SMTP_HOST` est vide côté MS-notifications, `SmtpMailProvider` logue `SMTP_HOST absent : e-mail à … non envoyé` et rend la main sans erreur : le consumer considère la livraison réussie. C'est `E-mail envoyé à …` qu'il faut chercher.
