@@ -1,3 +1,5 @@
+from typing import Optional
+
 import strawberry
 
 from app.core.broker import broker
@@ -47,6 +49,10 @@ class TransitNetworkService:
             if resource_format == "GTFS":
                 return resource.endpoint_url, resource_format
         return data.endpoint_url, "GTFS"
+
+    @staticmethod
+    async def find_by_external_id(external_id: str) -> Optional[dict]:
+        return await registred_transit_network.find_one({"external_id": external_id})
 
     @staticmethod
     async def set_status(external_id: str, status: TransitNetworkStatus) -> bool:
